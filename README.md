@@ -1,8 +1,8 @@
 # Automated-Server-Host-Shutdown
-Automate the shutdown process for poweroutages, hardware maintenance or Storm Prep.
 
 ### Purpose: 
-Completely automate the Power off procedures in the event that we need to shut down for a power outage.
+Completely automate the Power off procedures in the event that we need to shut down for a power outage.  Automate the shutdown process for poweroutages, hardware maintenance or Storm Prep.
+
 
 **The script will perform the following:**  
 1. The Administrator will be asked to agree to the above statement with the understand of the below tasks  
