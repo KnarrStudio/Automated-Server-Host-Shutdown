@@ -1,35 +1,4 @@
-﻿
-<#
-
-    Version Road Map: 
-    1. Automate the Shutdown procedures
-    a. Stop Services that need to be stopped
-    b. Turn off DRS
-    c. Move VM's to specific Host and Snapshot
-    d. Power off VM's
-    e. Put Hosts in maintenance mode
-    f. Shut down Hosts
-    2. Automate the Power On produre after turning the Hosts back on.
-    a. Remove Hosts from Maintenance mode
-    b. Start Powering on VM's in a specific order
-    c. Start services that may have been set to "disabled" or "manual"
-    d. Turn DRS back on
-    e. Restart all workstations
-    3. Logging and Reports
-    a. Log the operations to provide a report of and timeline
-    4. Allow Admin to select different options
-    a. Full power outage with logging
-    b. Emergency Power off all servers
-    c. Put all hosts in Maintenance mode.
-    d. Do a "Dry Run" with logging
-    e. Power on or off specific servers based on Tags or Host
-    f. shutdown with or without Snapshots
-    g. Remove all Snapshots and create new for shutdown
-    h. Clone some systems
-   
-    Purpose: Completely automate the Power off procedures in the event that we need to shut down for a power outage.
-
-#>
+﻿#requires -Version 3.0
 
 function Start-PowerOutage
 {
@@ -72,7 +41,7 @@ function Start-PowerOutage
     # Snapshots WithMemory or Without memory.  Snapshots with memory take longer, but if think there might be problems after the restart you will want to use this.  
     # Snapshots Key. Where only some systems with have the memory snapped.  This would be good in an Unplanned or emergency situation
         
-    [Parameter(Mandatory)][String]
+    [Parameter(Mandatory,HelpMessage = 'Add help message for user')][String]
     $Snapshots,
         
     [Switch]
@@ -88,18 +57,17 @@ function Start-PowerOutage
     {
       param
       (
-        [Parameter(Mandatory)][Object]$HostOne,
+        [Parameter(Mandatory,HelpMessage = 'Add help message for user')][Object]$HostOne,
 
-        [Parameter(Mandatory)][Object]$HostTwo
+        [Parameter(Mandatory,HelpMessage = 'Add help message for user')][Object]$HostTwo
       )
 
       function Get-VmsFromHost
       {
         param
         (
-          [Object]
           [Parameter(Mandatory, ValueFromPipeline, HelpMessage = 'Data to filter')]
-          $InputObject
+          [Object]$InputObject
         )
         process
         {
@@ -127,11 +95,6 @@ function Start-PowerOutage
   { 
   } # End - END
 }
-
-
-
-Shutdown-VmServers -Name 'Server1', 'Server2' -Order 'Tag' -Type 'Planned', 'Unplanned', 'Emergency', 'DryRun'
-
 function Shutdown-VmServers
 {
   <#
@@ -140,28 +103,28 @@ function Shutdown-VmServers
       .DESCRIPTION
       Detailed description of what Shutdown-VmServers does
       .EXAMPLE
-      First example
+      Shutdown-VmServers -Name 'Server1', 'Server2' -Order 'Tag' -Type 'Planned', 'Unplanned', 'Emergency', 'DryRun'
+
       Shutdown-VmServers
       .EXAMPLE
       Second example
       Shutdown-VmServers
   #>
 
-  [CmdletBinding()]
   param
   (
     # Parameter description
-    [Parameter(Position = 0, Mandatory = $true)]
+    [Parameter(Position = 0,HelpMessage = 'Add help message for user', Mandatory)]
     [string[]]
     $VmName,
 
     # Parameter description
-    [Parameter(Position = 1, Mandatory = $false)]
+    [Parameter(Mandatory = $true,HelpMessage = 'Add help message for user',Position = 1)]
     [string]
     $Order,
 
     # Parameter description
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory,HelpMessage = 'Add help message for user')]
     [ValidateSet('Planned', 'Unplanned', 'Emergency','DryRun')]
     [string]
     $Type
@@ -172,11 +135,15 @@ function Shutdown-VmServers
   # this code gets executed when the function is called
   # and all parameters have been processed
 }
-
-
-
-function MoveVMsRebootHost($HostOne,$HostTwo)
+function script:MoveVMsRebootHost
 {
+  [CmdletBinding()]
+  param
+  (
+    [Parameter(Mandatory = $true,HelpMessage = 'Add help message for user')][Object]$HostOne,
+
+    [Parameter(Mandatory = $true,HelpMessage = 'Add help message for user')][Object]$HostTwo
+  )
   do
   {
     $servers = get-vm | Where-Object -FilterScript {
@@ -202,18 +169,18 @@ function MoveVMsRebootHost($HostOne,$HostTwo)
   {
     Start-Sleep -Seconds 15
     $ServerState = (get-vmhost $HostOne).ConnectionState
-    Write-Host "Shutting Down $HostOne" -ForegroundColor Magenta
+    Write-Host ('Shutting Down {0}' -f $HostOne) -ForegroundColor Magenta
   }
   while ($ServerState -ne 'NotResponding')
-  Write-Host "$HostOne is Down" -ForegroundColor Magenta
+  Write-Host ('{0} is Down' -f $HostOne) -ForegroundColor Magenta
 
   do 
   {
     Start-Sleep -Seconds 60
     $ServerState = (get-vmhost $HostOne).ConnectionState
-    Write-Host "Waiting for Reboot ..."
+    Write-Host 'Waiting for Reboot ...'
   }
   while($ServerState -ne 'Maintenance')
-  Write-Host "$HostOne back online"
+  Write-Host ('{0} back online' -f $HostOne)
   $null = Set-VMHost $HostOne -State Connected 
 }

@@ -35,7 +35,7 @@
     $LogFileOutput = "$env:HOMEDRIVE\Temp\LogFileOutput.log" ## File to write to as this script runs
     $ShutDownArgreement = "$env:HOMEDRIVE\temp\ShutDownArgreement" ## File holds information and steps for the shutdown process
   
-  $SignAgreement = 'N'
+    $SignAgreement = 'N'
     Get-Content -Path $ShutDownArgreement
     $SignAgreement = Read-Host -Prompt 'Do you agree and have the above information Y/[N] '
     if($SignAgreement -eq 'y')
@@ -45,9 +45,8 @@
       $DirecteBy = Read-Host -Prompt 'Name of person directing the shutdown'
       $SignedShutdownAgreement = ('{0}-{1}.txt' -f $ShutDownArgreement, $DateTimeStamp)
       Copy-Item -Path $ShutDownArgreement -Destination $SignedShutdownAgreement
-      Write-Output -InputObject ('Today {0}. I, {1}, signed into {2} as {3} agree to the above Shutdown Agreement.  This task has been directed by {4}. _______________________  ' -f $DateTimeStamp, $AdminsFullName,$env:COMPUTERNAME, $env:username,$DirecteBy) | Out-File -FilePath $SignedShutdownAgreement -Append
+      Write-Output -InputObject ('Today {0}. I, {1}, signed into {2} as {3} agree to the above Shutdown Agreement.  This task has been directed by {4}. _______________________  ' -f $DateTimeStamp, $AdminsFullName, $env:COMPUTERNAME, $env:username, $DirecteBy) | Out-File -FilePath $SignedShutdownAgreement -Append
       #$SignedShutdownAgreement | Out-Printer 'EPSONA280B3 (XP-440 Series)'
-
     }
     Else
     {
@@ -160,7 +159,12 @@
          
       $Snapshotinfo = get-vm |
       get-snapshot |
-      Select-Object -Property VM, Name, Created, @{n = 'SizeGb';e = {'{0:N2}' -f $_.SizeGb}}#, id -AutoSize
+      Select-Object -Property VM, Name, Created, @{
+        n = 'SizeGb'
+        e = {
+          '{0:N2}' -f $_.SizeGb
+        }
+      }#, id -AutoSize
       If ($Snapshotinfo.count -ne 0)
       {
         Write-Verbose -Message "Snapshot information of all VM's in our vsphere."
