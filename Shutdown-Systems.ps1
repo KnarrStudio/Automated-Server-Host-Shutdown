@@ -1,6 +1,6 @@
 ﻿#requires -Version 3.0
 
-function Start-PowerOutage
+function Start-VmServerShutdown
 {
   <#
       .Synopsis
@@ -28,29 +28,25 @@ function Start-PowerOutage
       List of output types produced by this function.
   #>
 
-
   [OutputType([int])]
   Param
   (
     # 
-    [Parameter(Mandatory,HelpMessage = 'Type of power outage, Planned, Unplanned, Emergency',
-        ValueFromPipelineByPropertyName,
-    Position = 0)]
-    [Object]$Type,
+    [Parameter(Mandatory,HelpMessage = 'Type of shutdown required: Planned, Unplanned, Emergency', ValueFromPipeline,Position = 0)]
+    [ValidateSet('Planned', 'Unplanned', 'Emergency', 'DryRun')]
+    [String]$Type,
 
     # Snapshots WithMemory or Without memory.  Snapshots with memory take longer, but if think there might be problems after the restart you will want to use this.  
     # Snapshots Key. Where only some systems with have the memory snapped.  This would be good in an Unplanned or emergency situation
         
-    [Parameter(Mandatory,HelpMessage = 'Add help message for user')][String]
-    $Snapshots,
-        
-    [Switch]
-    $SnapshotsKey
+    [Parameter(Mandatory,HelpMessage = 'Create Snapshot first')]
+    [String]$Snapshots,
+    [Switch]$SnapshotsKey
   )
 
   Begin
   {
-  } # Beging - END
+  } #END - Begin
   Process
   {
     function script:Move-CriticalVmToPrimaryHost
@@ -90,10 +86,10 @@ function Start-PowerOutage
 
       Write-Verbose -Message 'Moves Completed!'
     }
-  } # Process - END
+  } #END - Process
   End
   { 
-  } # End - END
+  } #END - End
 }
 function Shutdown-VmServers
 {
@@ -114,9 +110,8 @@ function Shutdown-VmServers
   param
   (
     # Parameter description
-    [Parameter(Position = 0,HelpMessage = 'Add help message for user', Mandatory)]
-    [string[]]
-    $VmName,
+    [Parameter(Position = 0,HelpMessage = 'Add help message for user', Mandatory,ValueFromPipeline)]
+    [string[]]$VmName,
 
     # Parameter description
     [Parameter(Mandatory = $true,HelpMessage = 'Add help message for user',Position = 1)]
@@ -129,7 +124,6 @@ function Shutdown-VmServers
     [string]
     $Type
   )
-
 
   # TODO: place your function code here
   # this code gets executed when the function is called
@@ -147,20 +141,20 @@ function script:MoveVMsRebootHost
   do
   {
     $servers = get-vm | Where-Object -FilterScript {
-      $_.vmhost.name -eq $HostOne
-    }
+$_.vmhost.name -eq $HostOne
+}
     foreach($server in $servers)
     {
       #Write-Host "Moving $server from $HostOne to $HostTwo"
       move-vm $server -Destination $HostTwo
     }
   }while((get-vm | Where-Object -FilterScript {
-        $_.vmhost.name -eq $HostOne
-  }).count -ne 0)
+$_.vmhost.name -eq $HostOne
+}).count -ne 0)
 
   if((get-vm | Where-Object -FilterScript {
-        $_.vmhost.name -eq $HostOne
-  }).count -eq 0)
+$_.vmhost.name -eq $HostOne
+}).count -eq 0)
   {
     $null = Set-VMHost $HostOne -State Maintenance
     $null = Restart-vmhost $HostOne -confirm:$false 
